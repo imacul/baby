@@ -3,129 +3,756 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tap & Pop - Baby Game</title>
+<title>Baby Play Deck</title>
 <style>
+  :root {
+    --bg: #fff8ee;
+    --ink: #2b2b2b;
+    --muted: #6f6f6f;
+    --panel: rgba(255,255,255,0.82);
+    --border: rgba(43,43,43,0.10);
+    --shadow: 0 10px 30px rgba(53, 31, 12, 0.08);
+    --accent: #ff9f68;
+  }
+
+  * { box-sizing: border-box; }
   html, body {
     margin: 0;
     padding: 0;
-    background: #fdfaf3;
+    width: 100%;
+    min-height: 100%;
+    background:
+      linear-gradient(180deg, #fff8ee 0%, #fff4e3 100%);
+    color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    height: 100%;
-    overflow: hidden;
+    overflow-x: hidden;
   }
-  .wrap {
-    text-align: center;
-    padding: 1.5rem 1rem;
-    box-sizing: border-box;
+
+  body {
+    touch-action: manipulation;
   }
-  .subtitle {
-    font-size: 16px;
-    color: #888;
-    margin-bottom: 1.2rem;
-  }
-  #grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    max-width: 480px;
+
+  .app {
+    width: min(1120px, 100%);
     margin: 0 auto;
-    position: relative;
+    padding: 18px 16px 28px;
   }
-  .tile {
-    aspect-ratio: 1;
-    border-radius: 24px;
-    border: none;
-    font-size: 56px;
+
+  .topbar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.15s;
-    user-select: none;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
   }
-  .particle {
+
+  .brand {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .brand h1 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.1;
+    letter-spacing: 0;
+  }
+
+  .brand p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .stats {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.72);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .button-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .mode {
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.76);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 12px 16px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .mode:hover { transform: translateY(-1px); }
+  .mode.active {
+    background: #ffe3c8;
+    border-color: rgba(255,159,104,0.55);
+  }
+
+  .stage {
+    position: relative;
+    min-height: 68vh;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .stage-head {
+    padding: 16px 16px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .stage-title {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .stage-title strong {
+    font-size: 18px;
+  }
+
+  .stage-title span {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .primary {
+    border: none;
+    border-radius: 14px;
+    background: #2b2b2b;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    padding: 12px 16px;
+    cursor: pointer;
+  }
+
+  .content {
+    padding: 12px 16px 18px;
+  }
+
+  .game-grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .tap-grid {
+    grid-template-columns: repeat(3, minmax(88px, 1fr));
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .tile,
+  .pad,
+  .balloon,
+  .flip-card {
+    border: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+
+  .tile {
+    aspect-ratio: 1;
+    border-radius: 22px;
+    font-size: clamp(42px, 7vw, 72px);
+    display: grid;
+    place-items: center;
+    box-shadow: inset 0 -8px 0 rgba(0,0,0,0.08), 0 8px 16px rgba(0,0,0,0.06);
+    transition: transform 0.14s ease;
+  }
+
+  .tile.pop {
+    transform: scale(1.12) rotate(6deg);
+  }
+
+  .pad-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(92px, 1fr));
+    gap: 14px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .pad {
+    min-height: 120px;
+    border-radius: 18px;
+    font-size: clamp(34px, 5vw, 56px);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    box-shadow: inset 0 -10px 0 rgba(0,0,0,0.08), 0 8px 16px rgba(0,0,0,0.06);
+    transition: transform 0.14s ease, filter 0.14s ease;
+  }
+
+  .pad.flash {
+    transform: translateY(-3px) scale(1.03);
+    filter: brightness(1.06);
+  }
+
+  .balloon-field {
+    position: relative;
+    height: 56vh;
+    min-height: 420px;
+    overflow: hidden;
+    border-radius: 16px;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.65) 0 18%, transparent 19%),
+      radial-gradient(circle at 80% 30%, rgba(255,255,255,0.5) 0 16%, transparent 17%),
+      linear-gradient(180deg, #fffefb 0%, #fff3df 100%);
+  }
+
+  .balloon {
+    position: absolute;
+    width: 90px;
+    height: 118px;
+    border-radius: 50% 50% 46% 46%;
+    display: grid;
+    place-items: center;
+    font-size: 44px;
+    box-shadow: inset 0 -8px 0 rgba(0,0,0,0.08), 0 10px 20px rgba(0,0,0,0.08);
+    transform-origin: center center;
+    transition: transform 0.08s linear;
+  }
+
+  .balloon::after {
+    content: "";
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    width: 2px;
+    height: 28px;
+    background: rgba(70, 55, 40, 0.35);
+  }
+
+  .balloon.pop {
+    transform: scale(1.24) rotate(-7deg);
+  }
+
+  .flip-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 14px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .flip-card {
+    min-height: 150px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    font-size: clamp(44px, 7vw, 72px);
+    box-shadow: inset 0 -10px 0 rgba(0,0,0,0.08), 0 8px 16px rgba(0,0,0,0.06);
+    transition: transform 0.14s ease;
+  }
+
+  .flip-card.wobble {
+    transform: rotate(4deg) scale(1.03);
+  }
+
+  .spark {
     position: absolute;
     width: 8px;
     height: 8px;
-    border-radius: 50%;
+    border-radius: 999px;
     pointer-events: none;
-    transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+    transition: transform 0.45s ease-out, opacity 0.45s ease-out;
+  }
+
+  .menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .menu button {
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.78);
+    border-radius: 18px;
+    padding: 14px;
+    text-align: left;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+
+  .menu strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .menu span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .menu button.active {
+    outline: 2px solid rgba(255,159,104,0.75);
+    background: #fff0df;
+  }
+
+  .footer-note {
+    padding: 10px 16px 18px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  @media (max-width: 720px) {
+    .stage { min-height: 70vh; }
+    .balloon-field { min-height: 360px; height: 52vh; }
+    .flip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pad-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .tap-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 </style>
 </head>
 <body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <h1>Baby Play Deck</h1>
+      <p>Big buttons, soft colors, easy taps.</p>
+    </div>
+    <div class="stats">
+      <div class="pill">Score: <span id="score">0</span></div>
+      <div class="pill">Game: <span id="gameName">Tap & Pop</span></div>
+    </div>
+  </div>
 
-<div class="wrap">
-  <div class="subtitle">Tap any shape!</div>
-  <div id="grid"></div>
+  <div class="menu" id="menu"></div>
+
+  <div class="stage">
+    <div class="stage-head">
+      <div class="stage-title">
+        <strong id="stageTitle">Tap & Pop</strong>
+        <span id="stageHint">Tap the soft shapes for a tiny pop and a note.</span>
+      </div>
+      <button class="primary" id="shuffleBtn">New board</button>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+
+  <div class="footer-note" id="statusLine">Touch-friendly mini games for tiny hands.</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script>
-  const items = [
-    { emoji: '🐶', color: '#FAC775', note: 'C5' },
-    { emoji: '🐱', color: '#F0997B', note: 'D5' },
-    { emoji: '🐸', color: '#97C459', note: 'E5' },
-    { emoji: '🐵', color: '#7F77DD', note: 'F5' },
-    { emoji: '🐰', color: '#ED93B1', note: 'G5' },
-    { emoji: '🦋', color: '#85B7EB', note: 'A5' },
-    { emoji: '🐥', color: '#FAC775', note: 'B5' },
-    { emoji: '🐢', color: '#5DCAA5', note: 'C6' },
-    { emoji: '⭐', color: '#F0997B', note: 'D6' }
+  const gameCatalog = [
+    {
+      id: 'tap-pop',
+      label: 'Tap & Pop',
+      emoji: '🎈',
+      title: 'Tap & Pop',
+      hint: 'Tap the soft shapes for a tiny pop and a note.',
+      description: 'A bright 3x3 tap board with cheerful animal sounds.',
+    },
+    {
+      id: 'balloons',
+      label: 'Balloon Drift',
+      emoji: '🌤️',
+      title: 'Balloon Drift',
+      hint: 'Tap the drifting balloons before they float away.',
+      description: 'Floating balloons drift gently around the field.',
+    },
+    {
+      id: 'color-keys',
+      label: 'Color Keys',
+      emoji: '🎹',
+      title: 'Color Keys',
+      hint: 'Tap the color pads to hear the happy scale.',
+      description: 'Simple piano pads with big pastel blocks.',
+    },
+    {
+      id: 'animal-parade',
+      label: 'Animal Parade',
+      emoji: '🐻',
+      title: 'Animal Parade',
+      hint: 'Tap a card to hear an animal sound and see a new friend.',
+      description: 'Large animal cards that wobble and change.',
+    },
   ];
 
-  const grid = document.getElementById('grid');
-  let synth;
+  const state = {
+    currentGame: 'tap-pop',
+    score: 0,
+    time: 0,
+    synthReady: false,
+    synth: null,
+    nodes: [],
+    balloons: [],
+    activePads: [],
+    parade: [],
+  };
 
-  items.forEach((it) => {
+  const palette = ['#FAC775', '#F0997B', '#97C459', '#7F77DD', '#ED93B1', '#85B7EB', '#5DCAA5', '#FFCF95'];
+  const noteSets = {
+    'tap-pop': ['C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5', 'C6', 'D6'],
+    'color-keys': ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'],
+    'animal-parade': ['C3', 'D3', 'E3', 'G3'],
+    'balloons': ['C5', 'E5', 'G5', 'A5'],
+  };
+  const animalCycle = ['🐶', '🐱', '🐸', '🐵', '🐰', '🦊', '🐼', '🐻'];
+
+  const menu = document.getElementById('menu');
+  const content = document.getElementById('content');
+  const scoreEl = document.getElementById('score');
+  const gameNameEl = document.getElementById('gameName');
+  const stageTitleEl = document.getElementById('stageTitle');
+  const stageHintEl = document.getElementById('stageHint');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const statusLine = document.getElementById('statusLine');
+
+  function ensureSynth() {
+    if (!state.synthReady) {
+      state.synthReady = true;
+      state.synth = new Tone.Synth({
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.01, decay: 0.2, sustain: 0.15, release: 0.25 }
+      }).toDestination();
+    }
+    return state.synth;
+  }
+
+  async function playNote(note, duration = '8n') {
+    try {
+      await Tone.start();
+      ensureSynth().triggerAttackRelease(note, duration);
+    } catch (err) {
+      console.warn(err);
+    }
+  }
+
+  function burstAt(parent, x, y, color) {
+    for (let i = 0; i < 6; i++) {
+      const spark = document.createElement('div');
+      spark.className = 'spark';
+      spark.style.background = color;
+      spark.style.left = `${x}px`;
+      spark.style.top = `${y}px`;
+      parent.appendChild(spark);
+
+      const angle = (Math.PI * 2 * i) / 6;
+      const dist = 32 + Math.random() * 24;
+
+      requestAnimationFrame(() => {
+        spark.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`;
+        spark.style.opacity = '0';
+      });
+
+      setTimeout(() => spark.remove(), 450);
+    }
+  }
+
+  function clearContent() {
+    content.innerHTML = '';
+    state.nodes = [];
+  }
+
+  function syncHud() {
+    scoreEl.textContent = String(state.score);
+    gameNameEl.textContent = gameCatalog.find((g) => g.id === state.currentGame)?.label || 'Tap & Pop';
+  }
+
+  function renderMenu() {
+    menu.innerHTML = '';
+    for (const game of gameCatalog) {
+      const btn = document.createElement('button');
+      btn.className = game.id === state.currentGame ? 'active' : '';
+      btn.innerHTML = `<strong>${game.emoji} ${game.label}</strong><span>${game.description}</span>`;
+      btn.addEventListener('click', () => setGame(game.id));
+      menu.appendChild(btn);
+    }
+  }
+
+  function setGame(id) {
+    state.currentGame = id;
+    syncHud();
+    renderMenu();
+    stageTitleEl.textContent = gameCatalog.find((g) => g.id === id)?.title || 'Tap & Pop';
+    stageHintEl.textContent = gameCatalog.find((g) => g.id === id)?.hint || '';
+    statusLine.textContent = 'Touch-friendly mini games for tiny hands.';
+    clearContent();
+    if (id === 'tap-pop') buildTapPop();
+    if (id === 'balloons') buildBalloonDrift();
+    if (id === 'color-keys') buildColorKeys();
+    if (id === 'animal-parade') buildAnimalParade();
+    renderGameToText();
+  }
+
+  function makeBigTile(label, color, note) {
     const btn = document.createElement('button');
     btn.className = 'tile';
-    btn.style.background = it.color;
-    btn.textContent = it.emoji;
-    btn.setAttribute('aria-label', 'tap to play sound');
+    btn.style.background = color;
+    btn.textContent = label;
+    btn.dataset.note = note;
+    return btn;
+  }
 
-    btn.addEventListener('click', async () => {
-      if (!synth) {
-        await Tone.start();
-        synth = new Tone.Synth({
-          oscillator: { type: 'sine' },
-          envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.3 }
-        }).toDestination();
-      }
-      synth.triggerAttackRelease(it.note, '8n');
+  function triggerSparklyTap(node, note, color, scoreDelta = 1) {
+    state.score += scoreDelta;
+    syncHud();
+    const rect = node.getBoundingClientRect();
+    const parentRect = content.getBoundingClientRect();
+    burstAt(content, rect.left - parentRect.left + rect.width / 2, rect.top - parentRect.top + rect.height / 2, color);
+    playNote(note);
+  }
 
-      btn.style.transform = 'scale(1.3) rotate(8deg)';
-      setTimeout(() => { btn.style.transform = 'scale(1)'; }, 200);
+  function buildTapPop() {
+    const grid = document.createElement('div');
+    grid.className = 'game-grid tap-grid';
+    const items = [
+      { label: '🐶', color: '#FAC775', note: 'C5' },
+      { label: '🐱', color: '#F0997B', note: 'D5' },
+      { label: '🐸', color: '#97C459', note: 'E5' },
+      { label: '🐵', color: '#7F77DD', note: 'F5' },
+      { label: '🐰', color: '#ED93B1', note: 'G5' },
+      { label: '🦋', color: '#85B7EB', note: 'A5' },
+      { label: '🐥', color: '#FAC775', note: 'B5' },
+      { label: '🐢', color: '#5DCAA5', note: 'C6' },
+      { label: '⭐', color: '#FFCF95', note: 'D6' },
+    ];
 
-      for (let j = 0; j < 6; j++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        p.style.background = it.color;
+    for (const item of items) {
+      const btn = makeBigTile(item.label, item.color, item.note);
+      btn.addEventListener('click', () => {
+        btn.classList.add('pop');
+        setTimeout(() => btn.classList.remove('pop'), 180);
+        triggerSparklyTap(btn, item.note, item.color);
+      });
+      grid.appendChild(btn);
+    }
+    content.appendChild(grid);
+  }
 
-        const rect = btn.getBoundingClientRect();
-        const containerRect = grid.getBoundingClientRect();
-        p.style.left = (rect.left - containerRect.left + rect.width / 2) + 'px';
-        p.style.top = (rect.top - containerRect.top + rect.height / 2) + 'px';
+  function buildBalloonDrift() {
+    const field = document.createElement('div');
+    field.className = 'balloon-field';
+    const size = field.getBoundingClientRect();
 
-        grid.appendChild(p);
+    state.balloons = Array.from({ length: 6 }, (_, i) => ({
+      id: i,
+      x: 80 + i * 100,
+      y: 90 + (i % 2) * 120,
+      vx: i % 2 === 0 ? 0.5 : -0.45,
+      vy: i % 2 === 0 ? 0.24 : -0.2,
+      phase: i * 0.9,
+      color: palette[i % palette.length],
+      note: noteSets['balloons'][i % noteSets['balloons'].length],
+      emoji: ['🎈', '🎉', '🫧', '⭐', '💛', '🍓'][i % 6],
+      poppedUntil: 0,
+    }));
 
-        const angle = (Math.PI * 2 * j) / 6;
-        const dist = 50 + Math.random() * 20;
-
-        requestAnimationFrame(() => {
-          p.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`;
-          p.style.opacity = '0';
+    function renderBalloon(balloon) {
+      let node = balloon.node;
+      if (!node) {
+        node = document.createElement('button');
+        node.className = 'balloon';
+        node.style.background = balloon.color;
+        node.textContent = balloon.emoji;
+        node.addEventListener('click', () => {
+          const box = field.getBoundingClientRect();
+          state.score += 1;
+          syncHud();
+          balloon.poppedUntil = state.time + 360;
+          balloon.x = 60 + Math.random() * Math.max(200, box.width - 120);
+          balloon.y = 80 + Math.random() * Math.max(120, box.height - 220);
+          balloon.vx = (Math.random() - 0.5) * 0.9;
+          balloon.vy = (Math.random() - 0.5) * 0.7;
+          playNote(balloon.note);
+          const rect = node.getBoundingClientRect();
+          const parentRect = field.getBoundingClientRect();
+          burstAt(field, rect.left - parentRect.left + rect.width / 2, rect.top - parentRect.top + rect.height / 2, balloon.color);
         });
-
-        setTimeout(() => p.remove(), 550);
+        balloon.node = node;
+        field.appendChild(node);
       }
-    });
 
-    grid.appendChild(btn);
+      node.style.background = balloon.color;
+      node.textContent = balloon.emoji;
+      node.classList.toggle('pop', state.time < balloon.poppedUntil);
+      node.style.opacity = state.time < balloon.poppedUntil ? '0.35' : '1';
+      node.style.transform = `translate(${balloon.x}px, ${balloon.y}px) rotate(${Math.sin(state.time / 380 + balloon.phase) * 6}deg)`;
+    }
+
+    state.nodes = state.balloons.map(renderBalloon);
+    content.appendChild(field);
+    state.balloonField = field;
+  }
+
+  function buildColorKeys() {
+    const row = document.createElement('div');
+    row.className = 'pad-row';
+    const pads = [
+      { label: '🔵', color: '#85B7EB', note: 'C4' },
+      { label: '🟡', color: '#FAC775', note: 'D4' },
+      { label: '🟢', color: '#97C459', note: 'E4' },
+      { label: '🩷', color: '#ED93B1', note: 'F4' },
+      { label: '🟠', color: '#F0997B', note: 'G4' },
+      { label: '🟣', color: '#7F77DD', note: 'A4' },
+    ];
+    state.activePads = pads;
+
+    for (const pad of pads) {
+      const btn = document.createElement('button');
+      btn.className = 'pad';
+      btn.style.background = pad.color;
+      btn.textContent = pad.label;
+      btn.addEventListener('click', () => {
+        btn.classList.add('flash');
+        setTimeout(() => btn.classList.remove('flash'), 140);
+        triggerSparklyTap(btn, pad.note, pad.color);
+      });
+      row.appendChild(btn);
+    }
+
+    content.appendChild(row);
+  }
+
+  function buildAnimalParade() {
+    const grid = document.createElement('div');
+    grid.className = 'flip-grid';
+    const notes = noteSets['animal-parade'];
+    const colors = ['#FFF0D9', '#FFE6DF', '#EAF7DA', '#E6E2FF'];
+    const animals = [
+      ['🐶', 'woof'],
+      ['🐱', 'meow'],
+      ['🐸', 'ribbit'],
+      ['🐻', 'growl'],
+    ];
+
+    state.parade = animals.map((pair, i) => ({
+      index: i,
+      current: 0,
+      node: null,
+      set: pair,
+      note: notes[i % notes.length],
+      color: colors[i % colors.length],
+    }));
+
+    for (const card of state.parade) {
+      const btn = document.createElement('button');
+      btn.className = 'flip-card';
+      btn.style.background = card.color;
+      btn.textContent = card.set[card.current];
+      btn.addEventListener('click', () => {
+        card.current = (card.current + 1) % 2;
+        btn.classList.add('wobble');
+        btn.textContent = card.set[card.current];
+        setTimeout(() => btn.classList.remove('wobble'), 160);
+        state.score += 1;
+        syncHud();
+        playNote(card.note);
+        const rect = btn.getBoundingClientRect();
+        const parentRect = content.getBoundingClientRect();
+        burstAt(content, rect.left - parentRect.left + rect.width / 2, rect.top - parentRect.top + rect.height / 2, card.color);
+      });
+      card.node = btn;
+      grid.appendChild(btn);
+    }
+
+    content.appendChild(grid);
+  }
+
+  function update(dt) {
+    state.time += dt;
+
+    if (state.currentGame === 'balloons' && state.balloonField) {
+      const fieldRect = state.balloonField.getBoundingClientRect();
+      const maxX = Math.max(0, fieldRect.width - 100);
+      const maxY = Math.max(0, fieldRect.height - 140);
+
+      for (const balloon of state.balloons) {
+        balloon.x += balloon.vx * dt * 0.1;
+        balloon.y += balloon.vy * dt * 0.1;
+        balloon.vx += Math.sin(state.time / 900 + balloon.phase) * 0.005;
+        balloon.vy += Math.cos(state.time / 1100 + balloon.phase) * 0.004;
+
+        if (balloon.x < 0 || balloon.x > maxX) balloon.vx *= -1;
+        if (balloon.y < 0 || balloon.y > maxY) balloon.vy *= -1;
+        balloon.x = Math.max(0, Math.min(maxX, balloon.x));
+        balloon.y = Math.max(0, Math.min(maxY, balloon.y));
+      }
+
+      state.balloons.forEach((balloon) => {
+        if (balloon.node) {
+          balloon.node.classList.toggle('pop', state.time < balloon.poppedUntil);
+          balloon.node.style.opacity = state.time < balloon.poppedUntil ? '0.35' : '1';
+          balloon.node.style.transform = `translate(${balloon.x}px, ${balloon.y}px) rotate(${Math.sin(state.time / 380 + balloon.phase) * 6}deg)`;
+        }
+      });
+    }
+  }
+
+  function renderGameToText() {
+    const payload = {
+      origin: 'top-left',
+      xAxis: 'right',
+      yAxis: 'down',
+      game: state.currentGame,
+      score: state.score,
+      time: Math.round(state.time),
+      balloonCount: state.balloons.length,
+      padCount: state.activePads.length,
+      cards: state.parade.map((c) => c.set[c.current]),
+    };
+    return JSON.stringify(payload);
+  }
+
+  window.render_game_to_text = renderGameToText;
+  window.advanceTime = (ms) => {
+    const steps = Math.max(1, Math.round(ms / (1000 / 60)));
+    for (let i = 0; i < steps; i++) update(1000 / 60);
+    return renderGameToText();
+  };
+
+  shuffleBtn.addEventListener('click', () => {
+    setGame(state.currentGame);
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === '1') setGame('tap-pop');
+    if (e.key === '2') setGame('balloons');
+    if (e.key === '3') setGame('color-keys');
+    if (e.key === '4') setGame('animal-parade');
+  });
+
+  renderMenu();
+  setGame('tap-pop');
+  syncHud();
+  requestAnimationFrame(function loop() {
+    update(16);
+    requestAnimationFrame(loop);
   });
 </script>
-
 </body>
 </html>
