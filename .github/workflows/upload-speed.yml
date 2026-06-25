@@ -59,13 +59,13 @@ PY
           {
             echo "### Upload speed test"
             echo ""
-            echo "- Endpoint: \`$endpoint\`"
-            echo "- Payload: \`$size_mb MB\`"
-            echo "- Runs: \`$runs\`"
-            echo "- Average: \`$avg Mbps\`"
+            echo "- Endpoint: $endpoint"
+            echo "- Payload: ${size_mb} MB"
+            echo "- Runs: $runs"
+            echo "- Average: ${avg} Mbps"
             echo ""
             for idx in "${!speeds[@]}"; do
-              echo "- Run $((idx + 1)): \`${speeds[$idx]} Mbps\`"
+              echo "- Run $((idx + 1)): ${speeds[$idx]} Mbps"
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
