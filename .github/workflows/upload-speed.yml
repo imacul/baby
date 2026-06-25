@@ -41,20 +41,12 @@ jobs:
             echo "Run $i/$runs"
             stats="$(curl -sS -o /dev/null -w '%{size_upload} %{time_total} %{speed_upload}' --data-binary @payload.bin "$endpoint")"
             read -r bytes seconds bytes_per_sec <<< "$stats"
-            mbps="$(python3 - <<PY
-speed = float("$bytes_per_sec")
-print(f"{(speed * 8) / 1_000_000:.2f}")
-PY
-)"
+            mbps="$(python3 -c "speed = float('$bytes_per_sec'); print(f'{(speed * 8) / 1_000_000:.2f}')")"
             speeds+=("$mbps")
             echo "Uploaded ${bytes} bytes in ${seconds}s -> ${mbps} Mbps"
           done
 
-          avg="$(python3 - <<PY
-values = [float(x) for x in "${speeds[*]}".split()]
-print(f"{sum(values)/len(values):.2f}")
-PY
-)"
+          avg="$(python3 -c "values = [float(x) for x in '${speeds[*]}'.split()]; print(f'{sum(values)/len(values):.2f}')")"
 
           {
             echo "### Upload speed test"
