@@ -1,0 +1,74 @@
+name: Upload Speed Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      size_mb:
+        description: Payload size per run in MB
+        required: false
+        default: "10"
+      runs:
+        description: Number of test runs
+        required: false
+        default: "3"
+      endpoint:
+        description: Upload endpoint
+        required: false
+        default: "https://postman-echo.com/post"
+
+jobs:
+  upload-speed:
+    # Change this to a self-hosted runner if you want to measure your own network path.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate payload
+        run: |
+          set -euo pipefail
+          size_mb="${{ inputs.size_mb }}"
+          dd if=/dev/zero of=payload.bin bs=1M count="$size_mb" status=none
+          ls -lh payload.bin
+
+      - name: Run upload benchmark
+        run: |
+          set -euo pipefail
+          runs="${{ inputs.runs }}"
+          endpoint="${{ inputs.endpoint }}"
+          declare -a speeds=()
+
+          for i in $(seq 1 "$runs"); do
+            echo "Run $i/$runs"
+            stats="$(curl -sS -o /dev/null -w '%{size_upload} %{time_total} %{speed_upload}' --data-binary @payload.bin "$endpoint")"
+            read -r bytes seconds bytes_per_sec <<< "$stats"
+            mbps="$(python3 - <<PY
+speed = float("$bytes_per_sec")
+print(f"{(speed * 8) / 1_000_000:.2f}")
+PY
+)"
+            speeds+=("$mbps")
+            echo "Uploaded ${bytes} bytes in ${seconds}s -> ${mbps} Mbps"
+          done
+
+          avg="$(python3 - <<PY
+values = [float(x) for x in "${speeds[*]}".split()]
+print(f"{sum(values)/len(values):.2f}")
+PY
+)"
+
+          {
+            echo "### Upload speed test"
+            echo ""
+            echo "- Endpoint: \`$endpoint\`"
+            echo "- Payload: \`$size_mb MB\`"
+            echo "- Runs: \`$runs\`"
+            echo "- Average: \`$avg Mbps\`"
+            echo ""
+            for idx in "${!speeds[@]}"; do
+              echo "- Run $((idx + 1)): \`${speeds[$idx]} Mbps\`"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cleanup
+        if: always()
+        run: rm -f payload.bin
